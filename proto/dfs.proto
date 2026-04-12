@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package dfs;
+
+option go_package = "github.com/El-Maktab/distributed-file-system/pkg/api/dfs;dfs";
+
+service MasterService {
+  rpc RequestUpload(RequestUploadRequest) returns (RequestUploadResponse);
+  rpc Heartbeat(HeartbeatRequest) returns (SimpleResponse);
+  rpc NotifyUploadComplete(NotifyUploadCompleteRequest) returns (SimpleResponse);
+  rpc GetUploadStatus(GetUploadStatusRequest) returns (GetUploadStatusResponse);
+  rpc GetDownloadTargets(DownloadTargetsRequest) returns (DownloadTargetsResponse);
+}
+
+service DataKeeperService {
+  rpc ReplicateFile(ReplicateFileRequest) returns (ReplicateFileResponse);
+}
+
+message RequestUploadRequest {
+  string filename = 1;
+  int64 size = 2;
+  string checksum = 3;
+}
+
+message RequestUploadResponse {
+  bool ok = 1;
+  string error = 2;
+  string upload_id = 3;
+  string keeper_id = 4;
+  string keeper_host = 5;
+  int32 keeper_tcp_port = 6;
+}
+
+message HeartbeatRequest {
+  string keeper_id = 1;
+  string grpc_addr = 2;
+  string host = 3;
+  int32 tcp_port = 4;
+  int64 timestamp_unix_nano = 5;
+}
+
+message SimpleResponse {
+  bool ok = 1;
+  string error = 2;
+}
+
+message NotifyUploadCompleteRequest {
+  string upload_id = 1;
+  string keeper_id = 2;
+  string filename = 3;
+  string relative_path = 4;
+  int64 size = 5;
+  string checksum = 6;
+  bool is_replication = 7;
+}
+
+message GetUploadStatusRequest {
+  string upload_id = 1;
+}
+
+message GetUploadStatusResponse {
+  bool found = 1;
+  bool completed = 2;
+  string error = 3;
+}
+
+message DownloadTargetsRequest {
+  string filename = 1;
+}
+
+message DownloadTarget {
+  string keeper_id = 1;
+  string host = 2;
+  int32 tcp_port = 3;
+}
+
+message DownloadTargetsResponse {
+  bool ok = 1;
+  string error = 2;
+  repeated DownloadTarget targets = 3;
+}
+
+message ReplicateFileRequest {
+  string filename = 1;
+  string source_path = 2;
+  string destination_keeper_id = 3;
+  string destination_host = 4;
+  int32 destination_tcp_port = 5;
+  int64 size = 6;
+  string checksum = 7;
+}
+
+message ReplicateFileResponse {
+  bool ok = 1;
+  string error = 2;
+  string destination_relative_path = 3;
+  int64 bytes_transferred = 4;
+}
