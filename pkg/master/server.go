@@ -154,6 +154,16 @@ func (s *Server) Heartbeat(_ context.Context, req *dfs.HeartbeatRequest) (*dfs.S
 		s.keepers[req.KeeperId] = k
 	} else {
 		wasAlive = k.Alive
+
+		incomingTCPPort := int(req.TcpPort)
+		endpointChanged := k.Host != req.Host || k.TCPPort != incomingTCPPort || k.GRPCAddr != req.GrpcAddr
+		freshlyAlive := k.Alive && now.Sub(k.LastSeen) <= config.HeartbeatTimeout
+
+		// Reject identity hijacking while the existing keeper identity is still active.
+		if endpointChanged && freshlyAlive {
+			log.Printf("master: keeper heartbeat rejected keeper=%s reason=duplicate id with different endpoint existing_grpc=%s existing_tcp=%d existing_host=%s incoming_grpc=%s incoming_tcp=%d incoming_host=%s", req.KeeperId, k.GRPCAddr, k.TCPPort, k.Host, req.GrpcAddr, incomingTCPPort, req.Host)
+			return &dfs.SimpleResponse{Ok: false, Error: "keeper id already active with different endpoint"}, nil
+		}
 	}
 	k.Host = req.Host
 	k.TCPPort = int(req.TcpPort)
@@ -396,7 +406,7 @@ func (s *Server) triggerReplication(ctx context.Context, filename string, source
 			}
 			return errStaleSourceReplica
 		}
-		return fmt.Errorf(resp.Error)
+		return errors.New(resp.Error)
 	}
 
 	// Source keeper notifies completion in destination through master API too, but ensure state catches up.

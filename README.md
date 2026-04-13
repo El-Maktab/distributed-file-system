@@ -37,15 +37,6 @@ go run ./cmd/datakeeper -id keeper-2 -host 127.0.0.1 -grpc :50062 -tcp 60062 -ma
 go run ./cmd/datakeeper -id keeper-3 -host 127.0.0.1 -grpc :50063 -tcp 60063 -master 127.0.0.1:50051 -storage ./data/keeper-3
 ```
 
-If you only have one terminal available, run keepers in background:
-
-```bash
-go run ./cmd/datakeeper -id keeper-1 -host 127.0.0.1 -grpc :50061 -tcp 60061 -master 127.0.0.1:50051 -storage ./data/keeper-1 &
-go run ./cmd/datakeeper -id keeper-2 -host 127.0.0.1 -grpc :50062 -tcp 60062 -master 127.0.0.1:50051 -storage ./data/keeper-2 &
-go run ./cmd/datakeeper -id keeper-3 -host 127.0.0.1 -grpc :50063 -tcp 60063 -master 127.0.0.1:50051 -storage ./data/keeper-3 &
-wait
-```
-
 Upload:
 
 ```bash
